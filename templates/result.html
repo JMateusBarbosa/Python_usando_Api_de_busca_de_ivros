@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Informações do Livro</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Informações do Livro</h1>
+        {% if book_info.error %}
+            <p>{{ book_info.error }}</p>
+        {% else %}
+            <ul>
+                <li><strong>Título:</strong> {{ book_info['Título'] }}</li>
+                <li><strong>Autor:</strong> {{ book_info['Autor'] }}</li>
+                <li><strong>Editora:</strong> {{ book_info['Editora'] }}</li>
+                <li><strong>Data de Publicação:</strong> {{ book_info['Data de Publicação'] }}</li>
+                <li><strong>ISBN-13:</strong> {{ book_info['ISBN-13'] }}</li>
+                <li><strong>ISBN-10:</strong> {{ book_info['ISBN-10'] }}</li>
+                <li><strong>Categorias:</strong> {{ book_info['Categorias'] }}</li>
+            </ul>
+        {% endif %}
+        <a href="{{ url_for('index') }}">Voltar</a>
+    </div>
+</body>
+</html>
