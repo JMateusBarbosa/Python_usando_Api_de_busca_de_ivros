@@ -9,18 +9,10 @@
 <body>
     <div class="container">
         <h1>Leitor de Código de Barras</h1>
-        <form action="{{ url_for('scan') }}" method="post">
-            <button type="submit">Digitalizar Câmera</button>
-        </form>
-        <form action="{{ url_for('manual_entry') }}" method="post">
-            <input type="text" name="barcode" placeholder="Digite o código de barras">
+        <form id="scan-form" action="{{ url_for('manual_entry') }}" method="post">
+            <input type="text" id="barcode-input" name="barcode" placeholder="Digite ou escaneie o código de barras">
             <button type="submit">Submeter</button>
         </form>
-        <div class="video-container">
-            <h2>Visualização da Câmera</h2>
-            <img src="{{ url_for('video_feed') }}" id="video-feed">
-            <div id="scanning-feedback">Escaneando...</div>
-        </div>
     </div>
 </body>
 </html>

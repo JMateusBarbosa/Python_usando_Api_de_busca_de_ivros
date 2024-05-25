@@ -1,7 +1,4 @@
-import os
-import cv2
-from pyzbar.pyzbar import decode
-from flask import Flask, render_template, request, redirect, url_for, jsonify, Response
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 import requests
 import json
 
@@ -13,55 +10,6 @@ API_KEY = 'AIzaSyDRIxl5TD8nx01WD_LwL_1kmL2lQBQZj20'
 @app.route('/')
 def index():
     return render_template('index.html')
-
-def generate_frames():
-    cap = cv2.VideoCapture(0)  # Inicialize a câmera (pode variar em sistemas diferentes)
-    while True:
-        success, frame = cap.read()  # Capture frame-by-frame
-        if not success:
-            break
-        else:
-            # Codifique o frame como JPEG
-            ret, buffer = cv2.imencode('.jpg', frame)
-            frame = buffer.tobytes()
-            # Converta frame para bytes e renderize no navegador
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-
-@app.route('/video_feed')
-def video_feed():
-    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-@app.route('/scan', methods=['POST'])
-def scan():
-    cap = cv2.VideoCapture(0)  # Inicialize a câmera (pode variar em sistemas diferentes)
-    
-    barcode_number = None
-    while True:
-        ret, frame = cap.read()  # Captura um quadro da câmera
-        
-        # Decodifique o código de barras na imagem
-        barcode_number = decode_barcode(frame)
-
-        if barcode_number:
-            break
-
-    # Libere a câmera
-    cap.release()
-    cv2.destroyAllWindows()
-
-    if barcode_number:
-        return redirect(url_for('result', barcode=barcode_number))
-    else:
-        return "Código de barras não encontrado. Tente novamente."
-
-def decode_barcode(image):
-    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    barcodes = decode(gray_image)
-    for barcode in barcodes:
-        barcode_data = barcode.data.decode('utf-8')
-        return barcode_data
-    return None
 
 @app.route('/manual', methods=['POST'])
 def manual_entry():

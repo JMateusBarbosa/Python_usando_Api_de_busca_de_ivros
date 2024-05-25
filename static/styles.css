@@ -50,21 +50,3 @@ li {
     background: #fff;
     margin-bottom: 5px;
 }
-
-.video-container {
-    text-align: center;
-    margin-top: 20px;
-}
-
-#video-feed {
-    width: 100%;
-    max-width: 600px;
-    border: 2px solid #333;
-}
-
-#scanning-feedback {
-    margin-top: 10px;
-    font-size: 18px;
-    color: #ff0000;
-    display: none;
-}
