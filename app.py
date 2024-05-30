@@ -1,12 +1,12 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, jsonify, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 import requests
 import mysql.connector
 from mysql.connector import Error
 from wtforms import Form, StringField, validators
 
 app = Flask(__name__)
-app.secret_key = 'chave_secreta_aqui'
+app.secret_key = 'chave_secreta'
 # Substitua 'SUA_CHAVE_DE_API_AQUI' pela sua chave de API real do Google Books
 API_KEY = 'AIzaSyDRIxl5TD8nx01WD_LwL_1kmL2lQBQZj20'
 DB_HOST = os.getenv('DB_HOST', 'localhost')
@@ -88,6 +88,61 @@ def process_barcode(barcode_number):
     except Exception as e:
         return {"error": f"Erro ao obter informações do livro: {str(e)}"}
 
+
+
+# rota para editar livros
+@app.route('/edit/<int:book_id>', methods=['GET', 'POST'])
+def edit_book(book_id):
+    connection = mysql.connector.connect(
+        host=DB_HOST,
+        database=DB_DATABASE,
+        user=DB_USER,
+        password=DB_PASSWORD
+    )
+    cursor = connection.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM livros WHERE id = %s", (book_id,))
+    book = cursor.fetchone()
+
+    if request.method == 'POST':
+        titulo = request.form['titulo']
+        autor = request.form['autor']
+        editora = request.form['editora']
+        data_publicacao = request.form['data_publicacao']
+        isbn_13 = request.form['isbn_13']
+        isbn_10 = request.form['isbn_10']
+        categorias = request.form['categorias']
+
+        cursor.execute("""
+            UPDATE livros
+            SET titulo = %s, autor = %s, editora = %s, data_publicacao = %s, isbn_13 = %s, isbn_10 = %s, categorias = %s
+            WHERE id = %s
+        """, (titulo, autor, editora, data_publicacao, isbn_13, isbn_10, categorias, book_id))
+        connection.commit()
+        flash('Livro atualizado com sucesso!', 'success')
+        return redirect(url_for('listar_livros'))
+
+    return render_template('edit_book.html', book=book)
+
+# rota para deletar livros
+@app.route('/delete/<int:book_id>', methods=['POST'])
+def delete_book(book_id):
+    connection = mysql.connector.connect(
+        host=DB_HOST,
+        database=DB_DATABASE,
+        user=DB_USER,
+        password=DB_PASSWORD
+    )
+    cursor = connection.cursor()
+    cursor.execute("DELETE FROM livros WHERE id = %s", (book_id,))
+    connection.commit()
+    flash('Livro deletado com sucesso!', 'success')
+    return redirect(url_for('listar_livros'))
+
+
+
+
+
+
 def save_book_info(book_info):
     try:
         connection = mysql.connector.connect(
@@ -140,7 +195,7 @@ def save_book_info(book_info):
             connection.close()
 
 
-@app.route('/livros')
+@app.route('/livros', methods=['GET', 'POST'])
 def listar_livros():
     try:
         connection = mysql.connector.connect(
@@ -150,11 +205,44 @@ def listar_livros():
             password=DB_PASSWORD
         )
 
-        if connection.is_connected():
-            cursor = connection.cursor(dictionary=True)
-            cursor.execute("SELECT * FROM livros")
-            livros = cursor.fetchall()
-            return render_template('livros.html', livros=livros)
+        cursor = connection.cursor(dictionary=True)
+        
+        # Adicionar busca e filtros
+        search_query = request.args.get('search', '')
+        filter_by_author = request.args.get('author', '')
+        filter_by_category = request.args.get('category', '')
+        
+        # Paginação
+        page = request.args.get('page', 1, type=int)
+        per_page = 10  # Número de itens por página
+        offset = (page - 1) * per_page
+        
+        query = "SELECT * FROM livros WHERE 1=1"
+        params = []
+
+        if search_query:
+            query += " AND (titulo LIKE %s OR autor LIKE %s)"
+            params.extend([f"%{search_query}%", f"%{search_query}%"])
+
+        if filter_by_author:
+            query += " AND autor = %s"
+            params.append(filter_by_author)
+
+        if filter_by_category:
+            query += " AND categorias LIKE %s"
+            params.append(f"%{filter_by_category}%")
+        
+        query += " LIMIT %s OFFSET %s"
+        params.extend([per_page, offset])
+
+        cursor.execute(query, params)
+        livros = cursor.fetchall()
+
+        cursor.execute("SELECT COUNT(*) FROM livros WHERE 1=1")
+        total_livros = cursor.fetchone()['COUNT(*)']
+        total_pages = (total_livros + per_page - 1) // per_page
+        
+        return render_template('livros.html', livros=livros, search_query=search_query, filter_by_author=filter_by_author, filter_by_category=filter_by_category, page=page, total_pages=total_pages)
     except Error as e:
         return f"Erro ao conectar ao MySQL: {e}"
     finally:

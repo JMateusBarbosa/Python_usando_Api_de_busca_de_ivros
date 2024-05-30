@@ -1,3 +1,4 @@
+<!-- livros.html -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -6,11 +7,16 @@
     <link rel="stylesheet" href="../static/livros.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <title>Lista de Livros</title>
-    
 </head>
 <body>
     <div class="container">
         <h1>Lista de Livros</h1>
+        <form method="get" action="{{ url_for('listar_livros') }}">
+            <input type="text" name="search" placeholder="Buscar por título ou autor" value="{{ search_query }}">
+            <input type="text" name="author" placeholder="Filtrar por autor" value="{{ filter_by_author }}">
+            <input type="text" name="category" placeholder="Filtrar por categoria" value="{{ filter_by_category }}">
+            <button type="submit">Buscar</button>
+        </form>
         {% if livros %}
             <table>
                 <thead>
@@ -23,6 +29,7 @@
                         <th>ISBN-13</th>
                         <th>ISBN-10</th>
                         <th>Categorias</th>
+                        <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -36,10 +43,31 @@
                             <td>{{ livro.isbn_13 }}</td>
                             <td>{{ livro.isbn_10 }}</td>
                             <td>{{ livro.categorias }}</td>
+                            <td>
+                                <a href="{{ url_for('edit_book', book_id=livro.id) }}">Editar</a>
+                                <form action="{{ url_for('delete_book', book_id=livro.id) }}" method="post" style="display:inline;">
+                                    <button type="submit" onclick="return confirm('Tem certeza que deseja deletar este livro?');">Deletar</button>
+                                </form>
+                            </td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
+            <div class="pagination">
+                {% if page > 1 %}
+                    <a href="{{ url_for('listar_livros', page=page-1, search=search_query, author=filter_by_author, category=filter_by_category) }}">Anterior</a>
+                {% endif %}
+                {% for p in range(1, total_pages + 1) %}
+                    {% if p == page %}
+                        <strong>{{ p }}</strong>
+                    {% else %}
+                        <a href="{{ url_for('listar_livros', page=p, search=search_query, author=filter_by_author, category=filter_by_category) }}">{{ p }}</a>
+                    {% endif %}
+                {% endfor %}
+                {% if page < total_pages %}
+                    <a href="{{ url_for('listar_livros', page=page+1, search=search_query, author=filter_by_author, category=filter_by_category) }}">Próxima</a>
+                {% endif %}
+            </div>
         {% else %}
             <p>Nenhum livro encontrado.</p>
         {% endif %}

@@ -1,0 +1,43 @@
+<!-- edit_book.html -->
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Editar Livro</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Editar Livro</h1>
+        <form action="{{ url_for('edit_book', book_id=book['id']) }}" method="post">
+            <label for="titulo">Título:</label>
+            <input type="text" id="titulo" name="titulo" value="{{ book['titulo'] }}" required>
+            
+            <label for="autor">Autor:</label>
+            <input type="text" id="autor" name="autor" value="{{ book['autor'] }}" required>
+            
+            <label for="editora">Editora:</label>
+            <input type="text" id="editora" name="editora" value="{{ book['editora'] }}" required>
+            
+            <label for="data_publicacao">Data de Publicação:</label>
+            <input type="text" id="data_publicacao" name="data_publicacao" value="{{ book['data_publicacao'] }}" required>
+            
+            <label for="isbn_13">ISBN-13:</label>
+            <input type="text" id="isbn_13" name="isbn_13" value="{{ book['isbn_13'] }}" required>
+            
+            <label for="isbn_10">ISBN-10:</label>
+            <input type="text" id="isbn_10" name="isbn_10" value="{{ book['isbn_10'] }}" required>
+            
+            <label for="categorias">Categorias:</label>
+            <input type="text" id="categorias" name="categorias" value="{{ book['categorias'] }}" required>
+            
+            <button type="submit">Salvar</button>
+        </form>
+        <form action="{{ url_for('delete_book', book_id=book['id']) }}" method="post">
+            <button type="submit" onclick="return confirm('Tem certeza que deseja deletar este livro?');">Deletar</button>
+        </form>
+        <a href="{{ url_for('listar_livros') }}">Voltar</a>
+    </div>
+</body>
+</html>
