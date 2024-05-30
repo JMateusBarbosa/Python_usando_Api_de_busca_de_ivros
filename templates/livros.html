@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../static/livros.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Lista de Livros</title>
+    
+</head>
+<body>
+    <div class="container">
+        <h1>Lista de Livros</h1>
+        {% if livros %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Título</th>
+                        <th>Autor</th>
+                        <th>Editora</th>
+                        <th>Data de Publicação</th>
+                        <th>ISBN-13</th>
+                        <th>ISBN-10</th>
+                        <th>Categorias</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for livro in livros %}
+                        <tr>
+                            <td>{{ livro.id }}</td>
+                            <td>{{ livro.titulo }}</td>
+                            <td>{{ livro.autor }}</td>
+                            <td>{{ livro.editora }}</td>
+                            <td>{{ livro.data_publicacao }}</td>
+                            <td>{{ livro.isbn_13 }}</td>
+                            <td>{{ livro.isbn_10 }}</td>
+                            <td>{{ livro.categorias }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>Nenhum livro encontrado.</p>
+        {% endif %}
+        <div style="text-align: center;">
+            <a href="{{ url_for('index') }}">Voltar</a>
+        </div>
+    </div>
+</body>
+</html>
