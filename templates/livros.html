@@ -1,4 +1,3 @@
-<!-- livros.html -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -15,7 +14,7 @@
             <input type="text" name="search" placeholder="Buscar por título ou autor" value="{{ search_query }}">
             <input type="text" name="author" placeholder="Filtrar por autor" value="{{ filter_by_author }}">
             <input type="text" name="category" placeholder="Filtrar por categoria" value="{{ filter_by_category }}">
-            <button type="submit">Buscar</button>
+            <button type="submit"><img src="../static/search-icon.png" alt="Search Icon"></button>
         </form>
         {% if livros %}
             <table>
@@ -44,34 +43,34 @@
                             <td>{{ livro.isbn_10 }}</td>
                             <td>{{ livro.categorias }}</td>
                             <td>
-                                <a href="{{ url_for('edit_book', book_id=livro.id) }}">Editar</a>
+                                <a href="{{ url_for('edit_book', book_id=livro.id) }}"><img src="../static/edit-icon.png" alt="Edit Icon"></a>
                                 <form action="{{ url_for('delete_book', book_id=livro.id) }}" method="post" style="display:inline;">
-                                    <button type="submit" onclick="return confirm('Tem certeza que deseja deletar este livro?');">Deletar</button>
+                                    <button type="submit" onclick="return confirm('Tem certeza que deseja deletar este livro?');"><img src="../static/delete-icon.png" alt="Delete Icon"></button>
                                 </form>
                             </td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
+
+            <!-- Paginação -->
             <div class="pagination">
                 {% if page > 1 %}
-                    <a href="{{ url_for('listar_livros', page=page-1, search=search_query, author=filter_by_author, category=filter_by_category) }}">Anterior</a>
+                    <a href="{{ url_for('listar_livros', page=page-1, search=search_query, author=filter_by_author, category=filter_by_category) }}">&laquo; Anterior</a>
                 {% endif %}
+
                 {% for p in range(1, total_pages + 1) %}
-                    {% if p == page %}
-                        <strong>{{ p }}</strong>
-                    {% else %}
-                        <a href="{{ url_for('listar_livros', page=p, search=search_query, author=filter_by_author, category=filter_by_category) }}">{{ p }}</a>
-                    {% endif %}
+                    <a href="{{ url_for('listar_livros', page=p, search=search_query, author=filter_by_author, category=filter_by_category) }}" class="{% if p == page %}active{% endif %}">{{ p }}</a>
                 {% endfor %}
+
                 {% if page < total_pages %}
-                    <a href="{{ url_for('listar_livros', page=page+1, search=search_query, author=filter_by_author, category=filter_by_category) }}">Próxima</a>
+                    <a href="{{ url_for('listar_livros', page=page+1, search=search_query, author=filter_by_author, category=filter_by_category) }}">Próximo &raquo;</a>
                 {% endif %}
             </div>
         {% else %}
             <p>Nenhum livro encontrado.</p>
         {% endif %}
-        <div style="text-align: center;">
+        <div style="text-align: center; margin-top: 5px;">
             <a href="{{ url_for('index') }}">Voltar</a>
         </div>
     </div>
