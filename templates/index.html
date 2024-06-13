@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../static/livros.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <title>Leitor de Código de Barras</title>
 </head>
@@ -12,9 +11,12 @@
         <h1>Leitor de Código de Barras</h1>
         <form id="scan-form" action="{{ url_for('manual_entry') }}" method="post">
             <input type="text" id="barcode-input" name="barcode" placeholder="Digite ou escaneie o código de barras">
-            <button type="submit"><img src="../static/search-icon.png" alt="Search Icon"></button>
+            <button type="submit">Buscar <img src="{{ url_for('static', filename='src/procurar.png') }}" alt="Search Icon"></button>
         </form>
         <a href="{{ url_for('listar_livros') }}">Ver Lista de Livros</a>
+        <img src="/static/src/b6.jpg" alt="banner">
+        
+
     </div>
 </body>
 </html>

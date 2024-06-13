@@ -19,10 +19,18 @@ class BarcodeForm(Form):
 
 @app.route('/')
 def index():
+    """
+    Rota principal que renderiza o template 'index.html'.
+    """
     return render_template('index.html')
 
 @app.route('/manual', methods=['POST'])
 def manual_entry():
+    """
+    Rota para entrada manual de código de barras.
+    Valida o formulário e redireciona para a rota 'result' se válido.
+    Caso contrário, exibe uma mensagem de erro no template 'index.html'.
+    """
     form = BarcodeForm(request.form)
     if form.validate():
         barcode_number = form.barcode.data
@@ -37,11 +45,20 @@ def manual_entry():
 
 @app.route('/result')
 def result():
+    """
+    Rota para exibir os resultados da busca por código de barras.
+    Obtém o número do código de barras da query string e chama a função 'process_barcode'.
+    Renderiza o template 'result.html' com as informações do livro.
+    """
     barcode_number = request.args.get('barcode')
     book_info = process_barcode(barcode_number)
     return render_template('result.html', book_info=book_info)
 
 def process_barcode(barcode_number):
+    """
+    Processa o código de barras usando a API do Google Books.
+    Retorna as informações do livro encontrado ou uma mensagem de erro se não encontrado.
+    """
     try:
         response = requests.get(f'https://www.googleapis.com/books/v1/volumes?q=isbn:{barcode_number}&key={API_KEY}')
         response.raise_for_status()
@@ -89,10 +106,14 @@ def process_barcode(barcode_number):
         return {"error": f"Erro ao obter informações do livro: {str(e)}"}
 
 
-
 # rota para editar livros
 @app.route('/edit/<int:book_id>', methods=['GET', 'POST'])
 def edit_book(book_id):
+    """
+    Rota para editar informações de um livro no banco de dados.
+    Obtém os dados do livro pelo ID, permite a edição e atualiza no banco de dados.
+    Redireciona para a rota 'listar_livros' após a atualização.
+    """
     connection = mysql.connector.connect(
         host=DB_HOST,
         database=DB_DATABASE,
@@ -126,6 +147,10 @@ def edit_book(book_id):
 # rota para deletar livros
 @app.route('/delete/<int:book_id>', methods=['POST'])
 def delete_book(book_id):
+    """
+    Rota para deletar um livro do banco de dados pelo ID.
+    Realiza a exclusão do registro e redireciona para a rota 'listar_livros'.
+    """
     connection = mysql.connector.connect(
         host=DB_HOST,
         database=DB_DATABASE,
@@ -139,11 +164,11 @@ def delete_book(book_id):
     return redirect(url_for('listar_livros'))
 
 
-
-
-
-
 def save_book_info(book_info):
+    """
+    Salva as informações do livro no banco de dados MySQL.
+    Cria a tabela 'livros' se não existir e insere os dados do livro.
+    """
     try:
         connection = mysql.connector.connect(
             host=DB_HOST,
@@ -197,6 +222,10 @@ def save_book_info(book_info):
 
 @app.route('/livros', methods=['GET', 'POST'])
 def listar_livros():
+    """
+    Rota para listar todos os livros registrados no banco de dados.
+    Suporta busca, filtragem por autor e categoria, e paginacao.
+    """
     try:
         connection = mysql.connector.connect(
             host=DB_HOST,
@@ -214,7 +243,7 @@ def listar_livros():
         
         # Paginação
         page = request.args.get('page', 1, type=int)
-        per_page = 10  # Número de itens por página
+        per_page = 10 # Número de itens por página       
         offset = (page - 1) * per_page
         
         query = "SELECT * FROM livros WHERE 1=1"
