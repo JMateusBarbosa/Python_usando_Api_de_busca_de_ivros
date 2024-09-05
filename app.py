@@ -6,9 +6,10 @@ from mysql.connector import Error
 from wtforms import Form, StringField, validators
 
 app = Flask(__name__)
-app.secret_key = 'chave_secreta'
-# Substitua 'SUA_CHAVE_DE_API_AQUI' pela sua chave de API real do Google Books
-API_KEY = 'AIzaSyDRIxl5TD8nx01WD_LwL_1kmL2lQBQZj20'
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'default_secret_key')  # Define a chave secreta usando uma variável de ambiente
+# Pegando a chave da API do Google Books a partir da variável de ambiente
+API_KEY = os.getenv('GOOGLE_BOOKS_API_KEY', 'default_api_key')
+# Pegando as informações do banco de dados a partir das variáveis de ambiente
 DB_HOST = os.getenv('DB_HOST', 'localhost')
 DB_DATABASE = os.getenv('DB_DATABASE', 'book_database')
 DB_USER = os.getenv('DB_USER', 'book_user')

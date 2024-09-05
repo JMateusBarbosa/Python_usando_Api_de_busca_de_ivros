@@ -21,8 +21,8 @@ Pré-requisitos
 Configuração e Instalação
 <h3>Passo 1: Clonar o Repositório</h3>
 <pre><code>
-git clone https://github.com/seu-usuario/nome-do-repositorio.git
-cd nome-do-repositorio
+git clone https://github.com/JMateusBarbosa/Python_usando_Api_de_busca_de_livros
+cd Python_usando_Api_de_busca_de_livros
 </code></pre>
 <h3>Passo 2: Criar e Ativar um Ambiente Virtual</h3>
 <pre><code>
