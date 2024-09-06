@@ -1,29 +1,54 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 import requests
 import mysql.connector
 from mysql.connector import Error
 from wtforms import Form, StringField, validators
+import re
 
 app = Flask(__name__)
-app.secret_key = os.getenv('FLASK_SECRET_KEY', 'default_secret_key')  # Define a chave secreta usando uma variável de ambiente
-# Pegando a chave da API do Google Books a partir da variável de ambiente
-API_KEY = os.getenv('GOOGLE_BOOKS_API_KEY', 'default_api_key')
-# Pegando as informações do banco de dados a partir das variáveis de ambiente
+app.secret_key = 'chave_secreta'
+# Substitua 'SUA_CHAVE_DE_API_AQUI' pela sua chave de API real do Google Books
+API_KEY = 'AIzaSyDRIxl5TD8nx01WD_LwL_1kmL2lQBQZj20'
 DB_HOST = os.getenv('DB_HOST', 'localhost')
 DB_DATABASE = os.getenv('DB_DATABASE', 'book_database')
 DB_USER = os.getenv('DB_USER', 'book_user')
 DB_PASSWORD = os.getenv('DB_PASSWORD', '123456')
 
-class BarcodeForm(Form):
-    barcode = StringField('Barcode', [validators.DataRequired(), validators.Length(min=10, max=13)])
 
-@app.route('/')
+"""
+Se desejar fazer o deploy da palicação recomenta-se descomentar as linhas a seguir
+
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'default_secret_key')  # Define a chave secreta usando uma variável de ambiente
+# Pegando a chave da API do Google Books a partir da variável de ambiente
+API_KEY = os.getenv('GOOGLE_BOOKS_API_KEY', 'default_api_key')
+# Pegando as informações do banco de dados a partir das variáveis de ambiente
+
+ATENÇÃO!!!! 
+É de extrema importancia para a segurança da aplicação a definição das variaveis de ambinte na plataforma escolhida para fazer o deploy
+
+"""
+@app.route('/', methods=['GET'])
 def index():
     """
-    Rota principal que renderiza o template 'index.html'.
+    Rota para a página inicial. 
+    Cria um novo formulário e o passa para o template 'index.html'.
     """
-    return render_template('index.html')
+    form = BarcodeForm()
+    return render_template('index.html', form=form)
+
+class BarcodeForm(Form):
+    barcode = StringField('Barcode', [
+        validators.DataRequired(),
+        validators.Length(min=10, max=13, message='O código de barras deve ter entre 10 e 13 caracteres.'),
+        validators.Regexp(r'^\d+$', message='O código de barras deve conter apenas números.')
+    ])
+
+    def validate_barcode(self, field):
+        if len(field.data) not in [10, 13]:
+            raise validators.ValidationError('O código de barras deve ter exatamente 10 ou 13 dígitos.')
+
+
 
 @app.route('/manual', methods=['POST'])
 def manual_entry():
@@ -37,6 +62,7 @@ def manual_entry():
         barcode_number = form.barcode.data
         book_info = process_barcode(barcode_number)
         if book_info:
+            save_book_info(book_info)  # Certifique-se de que essa função é chamada apenas uma vez
             return redirect(url_for('result', barcode=barcode_number))
         else:
             flash('Nenhum livro encontrado para o código de barras fornecido.', 'error')
@@ -44,6 +70,7 @@ def manual_entry():
         flash('Código de barras inválido.', 'error')
     return render_template('index.html', form=form)
 
+    
 @app.route('/result')
 def result():
     """
@@ -73,7 +100,7 @@ def process_barcode(barcode_number):
             author = book_data.get('authors', ['Informação não disponível'])[0]
             publisher = book_data.get('publisher', 'Informação não disponível')
             published_date = book_data.get('publishedDate', 'Informação não disponível')
-            
+
             isbn_13 = None
             isbn_10 = None
             if 'industryIdentifiers' in book_data:
@@ -95,7 +122,9 @@ def process_barcode(barcode_number):
                 'Categorias': categories
             }
 
-            save_book_info(book_info)
+            # Verifique se o livro já foi adicionado
+            if not is_book_in_database(barcode_number):
+                save_book_info(book_info)  # Apenas salva se não estiver no banco
 
             return book_info
         else:
@@ -106,6 +135,31 @@ def process_barcode(barcode_number):
     except Exception as e:
         return {"error": f"Erro ao obter informações do livro: {str(e)}"}
 
+
+def is_book_in_database(barcode_number):
+    """
+    Verifica se um livro com o código de barras fornecido já está no banco de dados.
+    """
+    try:
+        connection = mysql.connector.connect(
+            host=DB_HOST,
+            database=DB_DATABASE,
+            user=DB_USER,
+            password=DB_PASSWORD
+        )
+        if connection.is_connected():
+            cursor = connection.cursor(dictionary=True)
+            query = "SELECT COUNT(*) FROM livros WHERE isbn_13 = %s OR isbn_10 = %s"
+            cursor.execute(query, (barcode_number, barcode_number))
+            result = cursor.fetchone()
+            return result['COUNT(*)'] > 0
+    except mysql.connector.Error as e:
+        print(f"Erro ao conectar ao MySQL: {e}")
+    finally:
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
+    return False
 
 # rota para editar livros
 @app.route('/edit/<int:book_id>', methods=['GET', 'POST'])
@@ -170,6 +224,7 @@ def save_book_info(book_info):
     Salva as informações do livro no banco de dados MySQL.
     Cria a tabela 'livros' se não existir e insere os dados do livro.
     """
+    print("Chamando save_book_info")  # Adicione esta linha para depuração
     try:
         connection = mysql.connector.connect(
             host=DB_HOST,
@@ -206,8 +261,6 @@ def save_book_info(book_info):
                 book_info['Categorias']
             ))
             connection.commit()
-
-            # Adicionar mensagem flash
             flash('Livro registrado com sucesso!', 'success')
     except mysql.connector.Error as e:
         print(f"Erro ao conectar ao MySQL: {e}")
